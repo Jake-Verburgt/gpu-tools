@@ -28,6 +28,7 @@
 #include <vector>
 #include <atomic>
 #include <algorithm>
+#include <numeric> //provides iota
 
 #define CUDA_CHECK(call)                                                       \
   do {                                                                         \
@@ -109,9 +110,16 @@ __global__ void stress_kernel(float* a, float* b, float* c, size_t n, uint32_t i
 
 struct Options {
   std::vector<int> gpus;
-  int seconds = 0;
+  int seconds = 5;
   double vram_frac = 0.80;   // fraction of FREE memory to allocate
   int block = 256;
+
+  Options() {
+      int device_count = 0;
+      CUDA_CHECK(cudaGetDeviceCount(&device_count));
+      gpus.resize(device_count);
+      std::iota(gpus.begin(), gpus.end(), 0);
+  }
 };
 
 static void usage(const char* prog) {
@@ -125,10 +133,10 @@ static void usage(const char* prog) {
 
 static Options parse_args(int argc, char** argv) {
   Options opt;
-  if (argc < 2) {
-    usage(argv[0]);
-    throw std::runtime_error("Missing arguments.");
-  }
+  // if (argc < 2) {
+  //   usage(argv[0]);
+  //   throw std::runtime_error("Missing arguments.");
+  // }
 
   for (int i = 1; i < argc; ++i) {
     std::string arg = argv[i];
